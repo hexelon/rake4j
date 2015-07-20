@@ -6,6 +6,12 @@
     <artifactId>rake4j</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
+    <repositories>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+    </repositories>
     <pluginRepositories>
         <pluginRepository>
             <snapshots>
@@ -80,9 +86,9 @@
             <version>1.7.9</version>
         </dependency>
         <dependency>
-            <groupId>io.deepreader.java.commons</groupId>
+            <groupId>com.github.idf</groupId>
             <artifactId>commons-util</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>1251af5f2a</version>
         </dependency>
     </dependencies>
 </project>
