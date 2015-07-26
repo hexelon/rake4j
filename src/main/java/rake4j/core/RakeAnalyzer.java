@@ -34,6 +34,7 @@ public class RakeAnalyzer extends Analyzer {
     private List<String> punctList = new ArrayList<>();
     private int minNumberLetters = 1;
     private int minWordsForPhrase = 1;
+    private int maxWordsForPhrase = 5;
     private KStemmer stemmer = new KStemmer();
     
     public RakeAnalyzer() throws URISyntaxException {
@@ -357,16 +358,16 @@ public class RakeAnalyzer extends Analyzer {
         return termList;
     }
 
-    private Map<Integer, String> filteredByLength(Map<Integer, String> phraseList, int minWords) {
+    private Map<Integer, String> filteredByLength(Map<Integer, String> phraseList, int minWords, int maxWords) {
         return phraseList.entrySet()
                 .parallelStream()
-                .filter(e -> e.getValue().split("\\s+").length>=minWords)
+                .filter(e -> e.getValue().split("\\s+").length>=minWords && e.getValue().split("\\s+").length<=maxWords )
                 .collect(Collectors.toConcurrentMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
-    private List<String> filteredByLength(List<String> phraseList, int minWords) {
+    private List<String> filteredByLength(List<String> phraseList, int minWords, int maxWords) {
         return phraseList.parallelStream()
-                .filter(e -> e.split("\\s+").length>=minWords)
+                .filter(e -> e.split("\\s+").length>=minWords && e.split("\\s+").length<=maxWords)
                 .collect(Collectors.toList());
     }
 
@@ -410,7 +411,7 @@ public class RakeAnalyzer extends Analyzer {
         List<String> sentenceList = splitToSentences(doc.getText().toLowerCase());
         List<String> phraseList = generateCandidateKeywords(sentenceList, regexList);
         Map<String, Float> wordScore = calculateWordScores(phraseList);
-        phraseList = filteredByLength(phraseList, minWordsForPhrase);
+        phraseList = filteredByLength(phraseList, minWordsForPhrase, maxWordsForPhrase);
         List<Term> keywordCandidates = generateCandidateKeywordScores(phraseList, wordScore);
         Comparator<? super Term> cmp = (o1, o2) -> o1.getScore() > o2.getScore() ? -1 : o1.getScore() == o2.getScore() ? 0 : 1;
         List<Term> sortedKeywords = keywordCandidates.parallelStream().sorted(cmp).distinct().collect(toList());
@@ -425,7 +426,7 @@ public class RakeAnalyzer extends Analyzer {
         phraseList = adjoinKeywords(phraseList, stopWordPat, text);
         phraseList = stem(phraseList);
         Map<String, Float> wordScore = calculateWordScores(new ArrayList<>(phraseList.values()));
-        phraseList = filteredByLength(phraseList, minWordsForPhrase);
+        phraseList = filteredByLength(phraseList, minWordsForPhrase, maxWordsForPhrase);
         Map<Integer, Term> keywordCandidates = generateCandidateKeywordScores(phraseList, wordScore);
         TreeMap<Integer, Term> sortedKeywords = Sorter.sortByValue(keywordCandidates, new Sorter.ValueComparator<Integer, Term>(keywordCandidates) {
             @Override
@@ -482,5 +483,13 @@ public class RakeAnalyzer extends Analyzer {
 
     public void setMinWordsForPhrase(int minWordsForPhrase) {
         this.minWordsForPhrase = minWordsForPhrase;
+    }
+
+    public int getMaxWordsForPhrase() {
+        return maxWordsForPhrase;
+    }
+
+    public void setMaxWordsForPhrase(int maxWordsForPhrase) {
+        this.maxWordsForPhrase = maxWordsForPhrase;
     }
 }
